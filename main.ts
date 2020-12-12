@@ -2,14 +2,21 @@ namespace SpriteKind {
     export const Monster = SpriteKind.create()
     export const FakeMonster = SpriteKind.create()
 }
-
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Monster, function(sprite: Sprite, otherSprite: Sprite) {
+    game.reset()
+})
 // Set the tile map to show a dark room
 function setTilemap () {
     tiles.loadMap(tiles.createMap(tilemap`level`))
     tiles.setTilemap(tilemap`level_0`)
 }
-
-// To redraw the tiles in different colors
+    function createAllMonsters(){
+    for(let i = 0; i < nightMonsterImgs.length; i++){
+        for(let j = 0; j < 3; j++){
+            makedualityMonster(nightMonsterImgs[i], dayItemImgs[i])
+        }
+    }
+ }
 function redoTiles () {
     tileImages = [
     myTiles.tile1,
@@ -38,7 +45,7 @@ function makedualityMonster(night: Image, day: Image){
     nightmonster.setFlag(SpriteFlag.Ghost, true)
 sprites.setDataSprite(monster, "day",  daymonster)
 sprites.setDataSprite(monster, "night", nightmonster)
-   monster.setPosition(randint(50, 2000), randint (0,100))
+   monster.setPosition(randint(50, 750), randint (0,100))
    monster.follow(nezar, 15)
 }
 let copiedTile: Image = null
@@ -262,3 +269,4 @@ let nezar  = sprites.create(nezarDarkImg, SpriteKind.Player)
 controller.moveSprite(nezar)
 scene.cameraFollowSprite(nezar) 
 tiles.placeOnTile(nezar, tiles.getTileLocation(0, 5))
+createAllMonsters()
