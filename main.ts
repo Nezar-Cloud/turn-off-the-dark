@@ -32,6 +32,14 @@ function makedualityMonster(night: Image, day: Image){
    let monster = sprites.create(night, SpriteKind.Monster)
     let daymonster = sprites.create(day, SpriteKind.Monster)
      let nightmonster = sprites.create(night, SpriteKind.Monster)
+     daymonster.setFlag(SpriteFlag.Invisible, true)
+    daymonster.setFlag(SpriteFlag.Ghost, true)
+    nightmonster.setFlag(SpriteFlag.Invisible, true)
+    nightmonster.setFlag(SpriteFlag.Ghost, true)
+sprites.setDataSprite(monster, "day",  daymonster)
+sprites.setDataSprite(monster, "night", nightmonster)
+   monster.setPosition(randint(50, 2000), randint (0,100))
+   monster.follow(nezar, 15)
 }
 let copiedTile: Image = null
 let tileImages: Image[] = []
