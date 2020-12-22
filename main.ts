@@ -1,22 +1,65 @@
 namespace SpriteKind {
     export const Monster = SpriteKind.create()
     export const FakeMonster = SpriteKind.create()
+    export const NormalThing = SpriteKind.create()
 }
-sprites.onOverlap(SpriteKind.Player, SpriteKind.Monster, function(sprite: Sprite, otherSprite: Sprite) {
-    game.reset()
-})
+function turnOnTheDark () {
+    setTilemap()
+    for (let value of sprites.allOfKind(SpriteKind.NormalThing)) {
+        value.setImage(sprites.readDataImage(value, "nightImg"))
+        value.follow(nezar, 15)
+        value.setKind(SpriteKind.Monster)
+    }
+    darkIsOFF = false
+}
+function createAllMonsters () {
+    for (let i = 0; i <= nightMonsterImgs.length - 1; i++) {
+        for (let index = 0; index < 3; index++) {
+            makedualityMonster(nightMonsterImgs[i], dayItemImgs[i])
+        }
+    }
+}
 // Set the tile map to show a dark room
 function setTilemap () {
     tiles.loadMap(tiles.createMap(tilemap`level`))
     tiles.setTilemap(tilemap`level_0`)
 }
-    function createAllMonsters(){
-    for(let i = 0; i < nightMonsterImgs.length; i++){
-        for(let j = 0; j < 3; j++){
-            makedualityMonster(nightMonsterImgs[i], dayItemImgs[i])
-        }
+controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
+    if (statusbar.value > 0) {
+        nezar.setImage(nezarLightImg)
+        turnOffTheDark()
     }
- }
+})
+function makedualityMonster (night: Image, day: Image) {
+    monster = sprites.create(night, SpriteKind.Monster)
+    sprites.setDataImage(monster, "dayImg", day)
+sprites.setDataImage(monster, "nightImg", night)
+monster.setPosition(randint(50, 750), randint(0, 100))
+    monster.follow(nezar, 15)
+}
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Monster, function (sprite, otherSprite) {
+    game.reset()
+})
+controller.A.onEvent(ControllerButtonEvent.Released, function () {
+    nezar.setImage(nezarDarkImg)
+    turnOnTheDark()
+})
+scene.onOverlapTile(SpriteKind.Player, myTiles.tile7, function (sprite, location) {
+    game.over(true)
+})
+function turnOffTheDark () {
+    redoTiles()
+    for (let value2 of sprites.allOfKind(SpriteKind.Monster)) {
+        value2.setImage(sprites.readDataImage(value2, "dayImg"))
+        value2.follow(null, 0)
+        value2.setKind(SpriteKind.NormalThing)
+    }
+    darkIsOFF = true
+}
+statusbars.onZero(StatusBarKind.Energy, function (status) {
+    turnOnTheDark()
+    nezar.setImage(nezarDarkImg)
+})
 function redoTiles () {
     tileImages = [
     myTiles.tile1,
@@ -35,27 +78,19 @@ function redoTiles () {
         tiles.coverAllTiles(tileImage, copiedTile)
     }
 }
-function makedualityMonster(night: Image, day: Image){
-   let monster = sprites.create(night, SpriteKind.Monster)
-    let daymonster = sprites.create(day, SpriteKind.Monster)
-     let nightmonster = sprites.create(night, SpriteKind.Monster)
-     daymonster.setFlag(SpriteFlag.Invisible, true)
-    daymonster.setFlag(SpriteFlag.Ghost, true)
-    nightmonster.setFlag(SpriteFlag.Invisible, true)
-    nightmonster.setFlag(SpriteFlag.Ghost, true)
-sprites.setDataSprite(monster, "day",  daymonster)
-sprites.setDataSprite(monster, "night", nightmonster)
-   monster.setPosition(randint(50, 750), randint (0,100))
-   monster.follow(nezar, 15)
-}
 let copiedTile: Image = null
 let tileImages: Image[] = []
-let vivian: Sprite = null
-let vivianLightImg: Image = null
-let vivianDarkImg: Image = null
+let darkIsOFF = false
+let nezar: Sprite = null
+let nezarLightImg: Image = null
+let nezarDarkImg: Image = null
 let dayItemImgs: Image[] = []
 let nightMonsterImgs: Image[] = []
-
+let monster: Sprite = null
+let vivianDarkImg = null
+let vivianLightImg = null
+let vivian = null
+let statusbar: StatusBarSprite = null
 nightMonsterImgs = [img`
     . . . . . . . . . . . . . . . . 
     . . . 8 8 8 8 8 8 8 . . . . . . 
@@ -228,45 +263,52 @@ dayItemImgs = [img`
     . . . . f f . . . . f . . . . . 
     . . . . . . . . . . . . . . . . 
     `]
-let nezarDarkImg = img`
-    . . . f f f f f . . . . .
-    . f f f f f f f f f . . .
-    . f f f f f f c f f f . .
-    f f f f c f f f c f f . .
-    f c f f c c f f f c c f f
-    f c c f f f f e f f f f f
-    f f f f f f f e e f f f .
-    f f e e f b f e e f f . .
-    . f e 4 e 1 f 4 4 f . . .
-    . f f f e 4 4 4 4 f . . .
-    . . f e e e e e f f . . .
-    . . e 4 4 c c c c f . . .
-    . . e 4 4 c c c c f . . .
-    . . f e e f 9 c c f . . .
-    . . . f f f f f f . . . .
-    . . . . f f f . . . . . .
-`
-let nezarLightImg = img`
-    . . . f f f f f . . . . .
-    . f f f f f f f f f . . .
-    . f f f f f f c f f f . .
-    f f f f c f f f c f f . .
-    f c f f c c f f f c c f f
-    f c c f f f f e f f f f f
-    f f f f f f f 4 e f f f .
-    f f e 4 f b f 4 4 f f . 5
-    . f 4 4 4 1 f 4 4 f . 5 .
-    . f f f 4 4 4 4 4 f 5 . 5
-    . . f e 4 4 4 b b 5 . 5 .
-    . . e 4 4 b b b 5 f 5 . .
-    . . e 4 4 b b b 5 f 5 . .
-    . . f e e f 6 b b f 5 . 5
-    . . . f f f f f f . . 5 .
-    . . . . f f f . . . 5 . 5
-`
+nezarDarkImg = img`
+    . . . f f f f f . . . . . 
+    . f f f f f f f f f . . . 
+    . f f f f f f c f f f . . 
+    f f f f c f f f c f f . . 
+    f c f f c c f f f c c f f 
+    f c c f f f f e f f f f f 
+    f f f f f f f e e f f f . 
+    f f e e f b f e e f f . . 
+    . f e 4 e 1 f 4 4 f . . . 
+    . f f f e 4 4 4 4 f . . . 
+    . . f e e e e e f f . . . 
+    . . e 4 4 c c c c f . . . 
+    . . e 4 4 c c c c f . . . 
+    . . f e e f 9 c c f . . . 
+    . . . f f f f f f . . . . 
+    . . . . f f f . . . . . . 
+    `
+nezarLightImg = img`
+    . . . f f f f f . . . . . 
+    . f f f f f f f f f . . . 
+    . f f f f f f c f f f . . 
+    f f f f c f f f c f f . . 
+    f c f f c c f f f c c f f 
+    f c c f f f f e f f f f f 
+    f f f f f f f 4 e f f f . 
+    f f e 4 f b f 4 4 f f . 5 
+    . f 4 4 4 1 f 4 4 f . 5 . 
+    . f f f 4 4 4 4 4 f 5 . 5 
+    . . f e 4 4 4 b b 5 . 5 . 
+    . . e 4 4 b b b 5 f 5 . . 
+    . . e 4 4 b b b 5 f 5 . . 
+    . . f e e f 6 b b f 5 . 5 
+    . . . f f f f f f . . 5 . 
+    . . . . f f f . . . 5 . 5 
+    `
 setTilemap()
-let nezar  = sprites.create(nezarDarkImg, SpriteKind.Player) 
+nezar = sprites.create(nezarDarkImg, SpriteKind.Player)
 controller.moveSprite(nezar)
-scene.cameraFollowSprite(nezar) 
+scene.cameraFollowSprite(nezar)
 tiles.placeOnTile(nezar, tiles.getTileLocation(0, 5))
 createAllMonsters()
+statusbar = statusbars.create(20, 4, StatusBarKind.Energy)
+statusbar.attachToSprite(nezar)
+game.onUpdateInterval(10, function () {
+    if (darkIsOFF) {
+        statusbar.value -= 1
+    }
+})
